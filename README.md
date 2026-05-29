@@ -15,7 +15,7 @@ an entity renderer.
 ## Install
 
 ```sh
-py -3.13 -m pip install --user "webview-overlay @ git+https://…/webview-overlay.git"
+py -3.13 -m pip install --user "webview-overlay @ git+https://github.com/Sa-Lat/webview-overlay.git"
 ```
 
 Requires Windows + Python 3.13 (pywebview pulls `pythonnet`; WebView2 Runtime
