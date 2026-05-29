@@ -11,7 +11,7 @@ frontend plugin hooks (window.OVERLAY_CONFIG).
 """
 from .config import OverlayConfig
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __all__ = ["OverlayConfig", "run", "__version__"]
 
 
