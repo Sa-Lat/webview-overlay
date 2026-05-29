@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en" data-theme="{{THEME}}">
+<head>
+<meta charset="utf-8">
+<title>{{BRAND}} overlay</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+{{FONT}}
+{{HEAD_CSS}}
+{{CONFIG_JSON}}
+</head>
+<body>
+<div id="root" data-theme="{{THEME}}">
+  <div class="wrap">
+    <div class="brand">
+      <span>{{BRAND}}</span>
+      <span class="brand-sub" id="sess-count">0</span>
+    </div>
+    <div class="rows" id="rows"></div>
+    <div class="divider"></div>
+    <div class="usage" id="usage-row" hidden>
+      <span>Use</span>
+      <div class="bar"><div class="bar-fill" id="bar-fill"></div></div>
+      <span id="usage-pct" class="tabular">0%</span>
+    </div>
+    <div class="entity-wrap" id="entity-wrap" hidden>
+      <canvas class="entity" id="overlay-entity"></canvas>
+    </div>
+  </div>
+</div>
+{{PROJECT_JS}}
+{{BASE_JS}}
+</body>
+</html>

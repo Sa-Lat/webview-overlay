@@ -1,0 +1,62 @@
+<!doctype html>
+<!--
+  Static browser preview of the base overlay shell. No pywebview, no producer:
+  overlay-base.js falls back to OVERLAY_CONFIG.sampleData. This renders the
+  package's monochrome base look (a project adds a theme stylesheet for colour).
+  Open directly in a browser; append ?theme=dark to preview the dark attribute.
+-->
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>webview-overlay preview</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../../src/webview_overlay/assets/base.css">
+<style>body { width: 200px; }</style>
+<script>
+  window.OVERLAY_CONFIG = {
+    pollMs: 500,
+    agelessStates: ["idle", "done", "start"],
+    pulseStates: ["permission", "error", "compact", "alert", "thinking"],
+    stateLabels: { idle: "idle", done: "done", start: "start" },
+    usageThresholds: [[80, "#e85555"], [50, "#d7a04a"]],
+    defaultEmotion: "idle",
+    sampleData: {
+      state: "thinking",
+      ts: 0,
+      usage_5h_pct: 42,
+      sessions: [
+        { state: "permission", cwd: "navigatoren", age_s: 12,
+          session_id: "a", label: "Fix the auth middleware bug" },
+        { state: "thinking", cwd: "cube", age_s: 184,
+          session_id: "b", label: "Extract overlay package" },
+        { state: "error", cwd: "cube", age_s: 47,
+          session_id: "c", label: "Add multi-session subline" },
+        { state: "idle", cwd: "backend-api", age_s: 0,
+          session_id: "d", label: "Investigate slow endpoint" }
+      ]
+    }
+  };
+</script>
+</head>
+<body>
+<div id="root" data-theme="light">
+  <div class="wrap">
+    <div class="brand">
+      <span>overlay</span>
+      <span class="brand-sub" id="sess-count">0</span>
+    </div>
+    <div class="rows" id="rows"></div>
+    <div class="divider"></div>
+    <div class="usage" id="usage-row" hidden>
+      <span>Use</span>
+      <div class="bar"><div class="bar-fill" id="bar-fill"></div></div>
+      <span id="usage-pct" class="tabular">0%</span>
+    </div>
+    <div class="entity-wrap" id="entity-wrap" hidden>
+      <canvas class="entity" id="overlay-entity"></canvas>
+    </div>
+  </div>
+</div>
+<script src="../../src/webview_overlay/assets/overlay-base.js"></script>
+</body>
+</html>

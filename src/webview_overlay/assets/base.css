@@ -1,0 +1,214 @@
+/* webview-overlay — base structure.
+ *
+ * Pure layout/structure. Every themed value reads a CSS custom property with
+ * a sane fallback, so this stylesheet renders a coherent monochrome overlay
+ * on its own. A consuming project ships a theme stylesheet that DEFINES those
+ * tokens (--card, --text, --acc-*, …) to paint its palette on top.
+ */
+
+html, body {
+  margin: 0;
+  padding: 0;
+  /* Window is opaque (transparent=True breaks under WebView2's layered-window
+     compositing). Body bg = card so the rectangular window edges blend with
+     the inner card area. */
+  background: var(--card, #ffffff);
+  font-family: var(--overlay-font, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  cursor: default;
+  overflow: hidden;
+}
+
+/* Wrap fills window width; height = content. overlay-base.js' ResizeObserver
+   reports .wrap height up to Python so the OS window shrinks to fit. */
+#root, .wrap {
+  width: 100%;
+}
+
+/* ───────────────────────────── card chrome */
+.wrap {
+  box-sizing: border-box;
+  padding: 12px;
+  background: var(--card, #ffffff);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.75) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.06) inset;
+  color: var(--text, #1a1a1a);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* container-type lets @container rules shrink text at the Small preset
+     without hard-coded breakpoints. */
+  container-type: inline-size;
+}
+
+@container (max-width: 160px) {
+  .brand     { font-size: 8px; letter-spacing: 1.4px; }
+  .brand-sub { font-size: 8px; }
+  .row       { font-size: 11px; padding: 3px 8px; }
+  .meta      { font-size: 9px; }
+  .usage     { font-size: 8px; letter-spacing: 1.2px; }
+  .subline   { font-size: 9px; padding-left: 14px; }
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+  color: var(--brand, #555555);
+  text-transform: uppercase;
+  padding: 0 2px 6px;
+  opacity: 0.85;
+}
+.brand-sub {
+  margin-left: auto;
+  opacity: 0.6;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: var(--brand-sub, var(--brand, #555555));
+}
+
+/* ───────────────────────────── rows */
+.row {
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  column-gap: 8px;
+  color: var(--text, #1a1a1a);
+}
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--acc, #8a8a8a);
+  position: relative;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--acc, #8a8a8a) 22%, transparent);
+}
+
+/* Live ripple — sonar ring grows 0 → 8px and fades over the first 60% of the
+   cycle. Driven by the data-live attribute (overlay-base.js sets it for any
+   state in OVERLAY_CONFIG.pulseStates); colour comes from the themed --acc. */
+.dot[data-live="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  animation: dot-ripple 1.5s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes dot-ripple {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--acc, #8a8a8a) 75%, transparent); }
+  60%  { box-shadow: 0 0 0 8px color-mix(in srgb, var(--acc, #8a8a8a) 0%, transparent); }
+  100% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--acc, #8a8a8a) 0%, transparent); }
+}
+
+.cwd {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.meta {
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--meta, #6a6a6a);
+  opacity: 0.62;
+}
+.meta[data-ageless="true"] {
+  opacity: 0.45;
+  letter-spacing: 0.6px;
+  text-transform: lowercase;
+}
+
+/* ───────────────────────────── divider */
+.divider {
+  height: 1px;
+  margin: 5px 2px 4px;
+  background: var(--divider, #d0d0d0);
+}
+
+/* ───────────────────────────── subline (session label) */
+.subline {
+  padding-left: 15px;
+  padding-right: 10px;
+  font-size: 10px;
+  font-weight: 500;
+  font-style: italic;
+  letter-spacing: 0.1px;
+  color: var(--subline, var(--meta, #6a6a6a));
+  opacity: 0.78;
+  line-height: 1.25;
+  margin-top: 1px;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ───────────────────────────── usage */
+.usage {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  column-gap: 8px;
+  align-items: center;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  color: var(--usage-fg, var(--meta, #6a6a6a));
+  text-transform: uppercase;
+  padding: 0 2px;
+  opacity: 0.85;
+}
+.bar {
+  height: 4px;
+  border-radius: 4px;
+  background: var(--bar-track, #d0d0d0);
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--bar-fill, #4a8298);
+  border-radius: 4px;
+  transition: width 350ms ease-out, background 200ms linear;
+  box-shadow: var(--dot-glow, none) color-mix(in srgb, var(--bar-fill, #4a8298) 50%, transparent);
+}
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* ───────────────────────────── drag cursor */
+body.draggable,
+body.draggable .wrap,
+body.draggable .wrap *:not(.ctx-menu):not(.ctx-menu *) {
+  cursor: move;
+}
+body.dragging, body.dragging * {
+  cursor: move !important;
+  user-select: none;
+}
+
+/* ───────────────────────────── entity canvas (optional, project-supplied) */
+.entity-wrap {
+  margin-top: 8px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--entity-bg, #000000);
+  box-shadow: var(--entity-shadow, 0 3px 10px rgba(0, 0, 0, 0.25));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.entity {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+/* Author rule beats UA [hidden]{display:none} on specificity, so raise it
+   here to guarantee entityWrap.hidden = true actually hides. */
+.entity-wrap[hidden] { display: none; }
