@@ -1,0 +1,33 @@
+/* Time-tracker theme + widget styling. Defines the palette tokens base.css
+   reads (so the card paints), plus styling for the mounted controls. */
+:root,
+:root[data-theme="light"] { --card: #f4f4f5; --text: #18181b; --brand: #3f3f46; --divider: #e4e4e7; }
+:root[data-theme="dark"]  { --card: #18181b; --text: #e4e4e7; --brand: #a1a1aa; --divider: #27272a; }
+
+#overlay-slot {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 2px;
+}
+.tt-select {
+  width: 100%;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--divider);
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+}
+.tt-row { display: flex; align-items: center; gap: 6px; }
+.tt-btn {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--divider);
+  background: var(--card);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.tt-btn.tt-go { background: #16a34a; border-color: #16a34a; color: #fff; }
+.tt-elapsed { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 700; }

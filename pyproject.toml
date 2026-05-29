@@ -7,18 +7,26 @@ name = "webview-overlay"
 version = "0.1.0"
 description = "Generic frameless WebView2 dashboard overlay for Windows (pywebview)."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "MIT"
 keywords = ["overlay", "webview", "pywebview", "windows", "dashboard"]
 classifiers = [
     "Environment :: Win32 (MS Windows)",
+    "Operating System :: Microsoft :: Windows",
     "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Desktop Environment",
 ]
 dependencies = ["pywebview>=5,<7"]
 
 [project.optional-dependencies]
 dev = ["pytest>=7"]
+
+[project.urls]
+Repository = "https://github.com/Sa-Lat/webview-overlay"
+Issues = "https://github.com/Sa-Lat/webview-overlay/issues"
 
 [project.scripts]
 webview-overlay = "webview_overlay.app:cli"

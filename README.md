@@ -80,6 +80,46 @@ optional entity hooks:
 
 Anything in `OverlayConfig.frontend_config` is merged into `OVERLAY_CONFIG`.
 
+## Shell mode (custom interactive overlays)
+
+The built-in `/dashboard.json` poll + rows/usage/entity render is just one app of
+the window shell. Set `builtin_dashboard=False` to get the shell **without** it —
+no poll, no data source required — and drive the UI yourself with your own assets
+and custom bridge methods. This is how you build, say, a time-tracking overlay with
+a `<select>` and Start/Stop buttons. See `examples/timetracker_demo.py`.
+
+Three primitives:
+
+- **`OverlayConfig.js_api`** — a bridge object whose public methods are exposed as
+  `window.pywebview.api.<name>()`. Do your HTTP/API calls here in Python (no CORS,
+  tokens stay server-side). Method names must not collide with the shell's own
+  (`dashboard`, `set_theme`, `show`, `hide`, `quit`, drag/menu/window methods, …) —
+  a collision raises at startup.
+- **`#overlay-slot`** — an empty `<div>` in the card where your JS mounts widgets.
+- **`overlay:ready` event** — fired on `document` once the shell is wired, with
+  `{detail: {root, api}}` (`api` is `null` in browser-preview mode — guard it).
+
+```python
+class TimerApi:
+    def start_timer(self, task): ...   # POST to your backend here
+    def stop_timer(self, task): ...
+
+run(OverlayConfig(app_name="tt", brand_text="track", builtin_dashboard=False,
+                  js_api=TimerApi(), assets=[str(H/"tt.js"), str(H/"tt.css")]))
+```
+```js
+document.addEventListener("overlay:ready", ({detail: {api}}) => {
+  document.getElementById("overlay-slot").innerHTML = `<select>…</select><button id="go">Start</button>`;
+  go.onclick = () => api.start_timer(taskId);   // → Python
+});
+```
+
+In shell mode the dashboard-driven menu items (Lift on Activity, Show Animation) are
+hidden and auto-unhide is inert — call `api.show()` from your own UI to un-hide.
+You still get drag, the native menu (theme/size/position/quit), anchor persistence,
+multi-instance, and DPI handling for free. Preview it in a browser via
+`tests/preview/preview-shell.html`.
+
 ## Theming
 
 `assets/base.css` is structure-only; every colour reads `var(--token, fallback)`
@@ -94,7 +134,9 @@ An instance is one process running `run(config)`. Concurrent overlays are
 isolated by `(app_name, instance_id)`: per-instance window title (no HWND cross-
 grab), per-instance `overlay.env` / `overlay-layouts.json`, and per-instance
 crash log. The default instance keeps unsuffixed filenames. No single-instance
-lock — launch as many as you like.
+lock — launch as many as you like. **For two instances of the same `app_name`,
+give each a distinct `instance_id`** — otherwise they share the same `overlay.env`
+/ `overlay-layouts.json` and last-writer-wins on position.
 
 ## Asset delivery
 

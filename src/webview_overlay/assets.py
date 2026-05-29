@@ -46,6 +46,7 @@ def overlay_config_payload(config) -> dict:
     is merged last so a project can override or extend any key."""
     payload = {
         "pollMs": 500,
+        "builtinDashboard": config.builtin_dashboard,
         "agelessStates": list(config.ageless_states),
         "pulseStates": list(config.pulse_states),
         "stateLabels": dict(config.state_labels),
@@ -82,6 +83,7 @@ def _fill_template(config, theme: str, font: str, head_css: str,
     repl = {
         "{{THEME}}": theme,
         "{{BRAND}}": brand,
+        "{{BRAND_HIDDEN}}": "" if config.brand_text else "hidden",
         "{{FONT}}": font,
         "{{HEAD_CSS}}": head_css,
         "{{CONFIG_JSON}}": _config_script(config),

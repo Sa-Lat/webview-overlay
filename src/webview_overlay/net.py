@@ -10,9 +10,11 @@ import json
 import os
 import subprocess
 import sys
+import urllib.parse
 import urllib.request
 
 _WSL_IP_CACHE = {"ip": None, "ts": 0.0}
+_MAX_BODY = 1 << 20  # 1 MiB cap — a drifted/rogue endpoint can't feed an unbounded body
 
 
 def resolve_wsl_ip(force: bool = False):
@@ -33,5 +35,7 @@ def resolve_wsl_ip(force: bool = False):
 
 
 def fetch_json(url: str, timeout: float = 1.0):
+    if urllib.parse.urlsplit(url).scheme not in ("http", "https"):
+        raise ValueError(f"refusing non-http(s) URL: {url!r}")
     with urllib.request.urlopen(url, timeout=timeout) as r:
-        return json.loads(r.read())
+        return json.loads(r.read(_MAX_BODY))

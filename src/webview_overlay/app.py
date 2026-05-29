@@ -49,6 +49,8 @@ def _resolve_mock_url(config) -> str | None:
         return config.url
     if config.host:
         return f"http://{config.host}:{config.port}"
+    if not config.builtin_dashboard:
+        return None  # shell mode: no data source needed
     ip = net.resolve_wsl_ip()
     if not ip:
         sys.stderr.write(
@@ -56,6 +58,25 @@ def _resolve_mock_url(config) -> str | None:
             "Set OverlayConfig.host or .url explicitly.\n")
         return None
     return f"http://{ip}:{config.port}"
+
+
+def _expose_js_api(window, obj) -> None:
+    """Expose a consumer bridge object's public methods as window.pywebview.api.<name>.
+    Reserved shell method names collide-fail so a consumer can't shadow them."""
+    reserved = {n for n in dir(JsApi) if not n.startswith("_")}
+    funcs = []
+    for name in dir(obj):
+        if name.startswith("_"):
+            continue
+        attr = getattr(obj, name)
+        if not callable(attr):
+            continue
+        if name in reserved:
+            raise ValueError(
+                f"js_api method {name!r} collides with a reserved shell method")
+        funcs.append(attr)
+    if funcs:
+        window.expose(*funcs)
 
 
 def run(config: OverlayConfig) -> None:
@@ -69,7 +90,7 @@ def run(config: OverlayConfig) -> None:
 
     store = Store(config)
     mock_url = _resolve_mock_url(config)
-    if not mock_url:
+    if config.builtin_dashboard and not mock_url:
         sys.exit(2)
 
     api = JsApi(config, store, mock_url)
@@ -139,6 +160,9 @@ def run(config: OverlayConfig) -> None:
         html_doc = assets.build_inline_document(config, api.theme)
         window = webview.create_window(html=html_doc, **create_kwargs)
     api.window = window
+
+    if config.js_api is not None:
+        _expose_js_api(window, config.js_api)
 
     def on_closed():
         try:

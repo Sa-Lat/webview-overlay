@@ -98,6 +98,8 @@ class JsApi:
             self.consecutive_failures += 1
             self._maybe_resolve_drift()
             return None
+        if not isinstance(d, dict):
+            return None  # producer returned a list/scalar/null — nothing to render
         d["theme"] = self.theme
         d["locked"] = self.locked
         d["hide_entity"] = self.hide_entity
@@ -204,6 +206,18 @@ class JsApi:
         except Exception as e:
             sys.stderr.write(f"hide failed: {e}\n")
 
+    def show(self):
+        """Un-hide the window. In shell mode (no dashboard heartbeat) there's no
+        auto-unhide, so a consumer can call this from a custom button."""
+        if not self.window:
+            return
+        self.hidden_by_user = False
+        self.hide_winner = None
+        try:
+            self.window.show()
+        except Exception as e:
+            sys.stderr.write(f"show failed: {e}\n")
+
     def quit(self):
         if not self.window:
             return
@@ -259,14 +273,18 @@ class JsApi:
 
         win_items = [
             (MF_CHECKED if self.topmost else 0, _WIN_TOPMOST, "Always on Top", 0),
-            (MF_CHECKED if self.lift_on_activity else 0, _WIN_LIFT, "Lift on Activity", 0),
         ]
         dispatch[_WIN_TOPMOST] = lambda: self.set_topmost(not self.topmost)
-        dispatch[_WIN_LIFT] = lambda: self.set_lift(not self.lift_on_activity)
-        if cfg.has_entity:
+        # Lift-on-activity + Show-Animation are dashboard-driven (the poll loop is
+        # their heartbeat) — hide them in shell mode where there's no poll.
+        if cfg.builtin_dashboard:
             win_items.append(
-                (MF_CHECKED if not self.hide_entity else 0, _WIN_ENTITY, "Show Animation", 0))
-            dispatch[_WIN_ENTITY] = lambda: self.set_hide_entity(not self.hide_entity)
+                (MF_CHECKED if self.lift_on_activity else 0, _WIN_LIFT, "Lift on Activity", 0))
+            dispatch[_WIN_LIFT] = lambda: self.set_lift(not self.lift_on_activity)
+            if cfg.has_entity:
+                win_items.append(
+                    (MF_CHECKED if not self.hide_entity else 0, _WIN_ENTITY, "Show Animation", 0))
+                dispatch[_WIN_ENTITY] = lambda: self.set_hide_entity(not self.hide_entity)
         win_items.append((0, _WIN_FRONT, "Bring to Front", 0))
         dispatch[_WIN_FRONT] = self.bring_to_front
 

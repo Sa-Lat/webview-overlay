@@ -29,8 +29,13 @@ class OverlayConfig:
     env_prefix: str = "OVERLAY_"               # overlay.env key namespace
 
     # ── data source (the /dashboard.json producer) ───────────────────────
+    # Built-in dashboard layer: poll /dashboard.json + render rows/usage/entity.
+    # False => shell-only (no poll, no data source required); the consumer drives
+    # the UI via its own assets + js_api. See README "Shell mode".
+    builtin_dashboard: bool = True
+
     dashboard_path: str = "/dashboard.json"
-    host: str | None = None                    # None => resolve WSL IP
+    host: str | None = None                    # None => resolve WSL IP (dashboard mode)
     port: int = 8765
     url: str | None = None                     # full override; wins over host/port
 
@@ -49,6 +54,11 @@ class OverlayConfig:
     assets: list[str] = field(default_factory=list)       # extra css/js, ordered; may be UNC
     frontend_config: dict = field(default_factory=dict)   # merged into window.OVERLAY_CONFIG
 
+    # Optional consumer bridge object. Its public methods are exposed to JS as
+    # window.pywebview.api.<name>() (via window.expose). Method names must not
+    # collide with the shell JsApi's own methods (see app.py reserved set).
+    js_api: object | None = None
+
     # Python paints the window background BEFORE CSS loads (frameless window
     # would otherwise flash white). The package can't read CSS vars, so the
     # consumer supplies a hex per theme.
@@ -65,6 +75,17 @@ class OverlayConfig:
 
     # ── asset delivery ────────────────────────────────────────────────────
     use_http_server: bool = False              # inline html= default; True = pywebview http_server (v0.2)
+
+    def __post_init__(self):
+        if not self.themes:
+            raise ValueError("OverlayConfig.themes must be non-empty")
+        if not self.size_presets:
+            raise ValueError("OverlayConfig.size_presets must be non-empty")
+        if self.default_theme not in self.themes:
+            raise ValueError(
+                f"default_theme {self.default_theme!r} not in themes {self.themes}")
+        if self.default_width <= 0:
+            raise ValueError("OverlayConfig.default_width must be > 0")
 
     # ── derived helpers ───────────────────────────────────────────────────
     @property

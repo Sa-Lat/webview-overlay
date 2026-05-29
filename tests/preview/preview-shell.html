@@ -1,0 +1,56 @@
+<!doctype html>
+<!--
+  Browser preview of SHELL MODE (builtinDashboard:false). No pywebview, no
+  producer: the dashboard poll is gated off, and a consumer script mounts an
+  interactive widget into #overlay-slot on the "overlay:ready" event — exactly
+  how a time-tracking overlay would. Open directly in a browser.
+-->
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>webview-overlay shell preview</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="../../src/webview_overlay/assets/base.css">
+<style>
+  body { width: 220px; }
+  :root, :root[data-theme="light"] { --card:#f4f4f5; --text:#18181b; --brand:#3f3f46; --divider:#e4e4e7; }
+  #overlay-slot { display:flex; flex-direction:column; gap:6px; padding:4px 2px; }
+  .tt-row { display:flex; align-items:center; gap:6px; }
+  button, select { font:inherit; padding:4px 8px; border-radius:6px; border:1px solid var(--divider); background:var(--card); color:var(--text); }
+  .tt-elapsed { margin-left:auto; font-weight:700; }
+</style>
+<script>
+  window.OVERLAY_CONFIG = { builtinDashboard: false };
+</script>
+</head>
+<body>
+<div id="root" data-theme="light">
+  <div class="wrap">
+    <div class="brand"><span>track</span></div>
+    <div id="overlay-slot"></div>
+    <div class="rows" id="rows"></div>
+    <div class="divider" hidden></div>
+    <div class="usage" id="usage-row" hidden>
+      <span>Use</span><div class="bar"><div class="bar-fill" id="bar-fill"></div></div>
+      <span id="usage-pct" class="tabular">0%</span>
+    </div>
+    <div class="entity-wrap" id="entity-wrap" hidden>
+      <canvas class="entity" id="overlay-entity"></canvas>
+    </div>
+  </div>
+</div>
+<script>
+  // Stand-in for the consumer's tt.js. api is null in browser preview.
+  document.addEventListener("overlay:ready", ({ detail: { api } }) => {
+    document.getElementById("overlay-slot").innerHTML = `
+      <select><option>Project A</option><option>Project B</option></select>
+      <div class="tt-row">
+        <button>Start</button><button>Stop</button>
+        <span class="tt-elapsed">00:00</span>
+      </div>`;
+    console.log("overlay:ready fired; api =", api);  // null here (no pywebview)
+  });
+</script>
+<script src="../../src/webview_overlay/assets/overlay-base.js"></script>
+</body>
+</html>

@@ -11,6 +11,9 @@
 
 const CFG = window.OVERLAY_CONFIG || {};
 const POLL_MS = CFG.pollMs || 500;
+// Shell mode (builtinDashboard:false) skips the /dashboard.json poll entirely —
+// the consumer drives the UI from its own assets via the "overlay:ready" event.
+const BUILTIN_DASHBOARD = CFG.builtinDashboard !== false;
 
 const AGELESS = new Set(CFG.agelessStates || []);
 const PULSE_STATES = new Set(CFG.pulseStates || []);
@@ -374,7 +377,13 @@ async function bootstrap() {
   attachDrag();
   attachContextMenu();
   attachAutoResize();
-  poll();
+  if (BUILTIN_DASHBOARD) poll();
+  // Consumer hook: mount custom widgets into #overlay-slot and wire
+  // <select>/<button> listeners. api is the pywebview bridge (null in browser
+  // preview mode — listeners must guard).
+  document.dispatchEvent(new CustomEvent("overlay:ready", {
+    detail: { root, api: api() },
+  }));
 }
 
 /* pywebview injects api asynchronously; listen for pywebviewready, plus a

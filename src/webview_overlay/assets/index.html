@@ -11,12 +11,13 @@
 <body>
 <div id="root" data-theme="{{THEME}}">
   <div class="wrap">
-    <div class="brand">
+    <div class="brand" {{BRAND_HIDDEN}}>
       <span>{{BRAND}}</span>
       <span class="brand-sub" id="sess-count">0</span>
     </div>
+    <div id="overlay-slot"></div>
     <div class="rows" id="rows"></div>
-    <div class="divider"></div>
+    <div class="divider" hidden></div>
     <div class="usage" id="usage-row" hidden>
       <span>Use</span>
       <div class="bar"><div class="bar-fill" id="bar-fill"></div></div>
