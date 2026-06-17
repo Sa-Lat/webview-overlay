@@ -57,7 +57,11 @@ class JsApi:
 
         # runtime (set after window creation)
         self.hwnd = None
-        self.window = None
+        # MUST stay underscore-prefixed: pywebview's inject_pywebview() recursively
+        # walks every non-_ attribute of the JsApi to enumerate exposable methods.
+        # A public self.window would drag it into window.native (.NET BrowserForm)
+        # → AccessibilityObject.Bounds.Empty.Empty… infinite recursion + COM spam.
+        self._window = None
         self.fingerprint = None
         self.primary_rect = (0, 0, 1920, 1080)
         self.anchor_r = None
@@ -104,11 +108,11 @@ class JsApi:
         d["locked"] = self.locked
         d["hide_entity"] = self.hide_entity
         state = d.get("state")
-        if self.hidden_by_user and state != self.hide_winner and self.window:
+        if self.hidden_by_user and state != self.hide_winner and self._window:
             self.hidden_by_user = False
             self.hide_winner = None
             try:
-                self.window.show()
+                self._window.show()
             except Exception as e:
                 sys.stderr.write(f"auto-unhide failed: {e}\n")
         if (self._initialised and self.lift_on_activity
@@ -193,7 +197,7 @@ class JsApi:
         self._bring_to_front_async()
 
     def hide(self):
-        if not self.window:
+        if not self._window:
             return
         try:
             d = net.fetch_json(self._dashboard_url, timeout=1)
@@ -202,27 +206,27 @@ class JsApi:
             self.hide_winner = None
         self.hidden_by_user = True
         try:
-            self.window.hide()
+            self._window.hide()
         except Exception as e:
             sys.stderr.write(f"hide failed: {e}\n")
 
     def show(self):
         """Un-hide the window. In shell mode (no dashboard heartbeat) there's no
         auto-unhide, so a consumer can call this from a custom button."""
-        if not self.window:
+        if not self._window:
             return
         self.hidden_by_user = False
         self.hide_winner = None
         try:
-            self.window.show()
+            self._window.show()
         except Exception as e:
             sys.stderr.write(f"show failed: {e}\n")
 
     def quit(self):
-        if not self.window:
+        if not self._window:
             return
         try:
-            self.window.destroy()
+            self._window.destroy()
         except Exception as e:
             sys.stderr.write(f"quit failed: {e}\n")
 
@@ -230,11 +234,11 @@ class JsApi:
     def show_menu(self):
         """TrackPopupMenu must run on the thread owning the HWND. JS bridge
         calls land on bridge threads — Invoke onto the WinForms UI thread."""
-        if not self.window or not self.hwnd:
+        if not self._window or not self.hwnd:
             return
         try:
             from System import Action  # pythonnet — provided by pywebview
-            self.window.native.BeginInvoke(Action(self._open_native_menu))
+            self._window.native.BeginInvoke(Action(self._open_native_menu))
         except Exception as e:
             sys.stderr.write(f"show_menu dispatch failed: {e}\n")
             try:

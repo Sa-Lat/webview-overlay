@@ -159,7 +159,7 @@ def run(config: OverlayConfig) -> None:
     else:
         html_doc = assets.build_inline_document(config, api.theme)
         window = webview.create_window(html=html_doc, **create_kwargs)
-    api.window = window
+    api._window = window
 
     if config.js_api is not None:
         _expose_js_api(window, config.js_api)
