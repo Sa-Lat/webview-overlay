@@ -82,6 +82,11 @@ class JsApi:
 
     # ── data ──────────────────────────────────────────────────────────────
     def _maybe_resolve_drift(self):
+        # Drift only applies to the auto-resolved WSL-IP mode (host/url unset).
+        # If the consumer pinned an explicit url or host — e.g. an in-process
+        # local server on 127.0.0.1 — respect it; never rewrite to a WSL IP.
+        if self.config.url or self.config.host:
+            return
         # 3 consecutive misses → re-resolve WSL IP (NAT-mode IPs drift on
         # `wsl --shutdown`).
         if self.consecutive_failures < 3:
