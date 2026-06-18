@@ -189,6 +189,12 @@ def run(config: OverlayConfig) -> None:
         sys.stderr.write(f"hwnd installed: {hwnd:#x}\n")
 
     window.events.loaded += on_loaded
+
+    # Tray-Icon (opt-in via config.tray_icon). Lazy: braucht pystray + Pillow
+    # nur wenn aktiviert; fehlen → Tray bleibt aus, Overlay läuft normal.
+    from . import tray
+    tray.start_tray(config, api)
+
     webview.start(debug=False)
 
 
@@ -200,6 +206,7 @@ _TOML_KEYS = {
     "initial_height", "brand_text", "assets", "frontend_config",
     "background_colors", "font_href", "font_family", "ageless_states",
     "pulse_states", "state_labels", "use_http_server",
+    "tray_icon", "tray_icon_path", "tray_icon_color", "tray_tooltip",
 }
 
 

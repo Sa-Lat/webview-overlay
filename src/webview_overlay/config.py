@@ -76,6 +76,16 @@ class OverlayConfig:
     # ── asset delivery ────────────────────────────────────────────────────
     use_http_server: bool = False              # inline html= default; True = pywebview http_server (v0.2)
 
+    # ── tray-Icon (Windows-Tray, „Hide" minimiert dorthin) ───────────────
+    # Opt-in: bringt pystray + Pillow als Runtime-Deps. Fehlt eins → kein Crash,
+    # nur Log + Tray bleibt aus. Default-Klick = Anzeigen; Rechtsklick = Menü.
+    tray_icon: bool = False
+    # PNG/ICO-Pfad fürs Tray-Icon. None → fallback: gemalter Pillow-Kreis in
+    # tray_icon_color. UNC-Pfade ok.
+    tray_icon_path: str | None = None
+    tray_icon_color: str = "#5b8def"
+    tray_tooltip: str | None = None            # None → window_title
+
     def __post_init__(self):
         if not self.themes:
             raise ValueError("OverlayConfig.themes must be non-empty")
