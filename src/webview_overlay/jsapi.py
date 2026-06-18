@@ -375,7 +375,11 @@ class JsApi:
         """JS ResizeObserver reports `.wrap` content height after every DOM
         mutation; resize the OS window to match, keeping the stored bottom-
         right anchor stable (physical px, bounds-checked) so the card grows
-        upward and never locks off-screen."""
+        upward and never locks off-screen.
+
+        `h` arrives as CSS (logical) px from getBoundingClientRect; scale to
+        physical px via the window's DPI — without this, content is clipped at
+        the bottom on >100% scaling (125% → ~20% lost)."""
         if not self.hwnd:
             sys.stderr.write(f"resize_height({h}): no hwnd\n")
             return
@@ -387,10 +391,12 @@ class JsApi:
         w = r - l
         cur_h = b - t
         try:
-            new_h = max(60, int(h))
+            logical_h = max(60, int(h))
         except (TypeError, ValueError):
             sys.stderr.write(f"resize_height({h}): bad value\n")
             return
+        dpi = win32.get_dpi_for_window(self.hwnd)
+        new_h = (logical_h * dpi + 95) // 96  # ceil-divide for sub-px content
         if new_h == cur_h:
             return
         anchor_b = self.anchor_b if self.anchor_b is not None else b

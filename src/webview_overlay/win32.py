@@ -73,6 +73,32 @@ def win32_get_rect(hwnd):
     return None
 
 
+def get_dpi_for_window(hwnd) -> int:
+    """Per-monitor DPI for the window. WebView2 / getBoundingClientRect report
+    CSS (logical) pixels; SetWindowPos works in physical pixels. Callers convert
+    via `physical = logical * dpi / 96`. Falls back to 96 (= 100% scaling) on any
+    error so the math is a no-op."""
+    if not hwnd:
+        return 96
+    try:
+        dpi = ctypes.windll.user32.GetDpiForWindow(hwnd)
+        if dpi:
+            return int(dpi)
+    except (AttributeError, OSError):
+        pass
+    try:
+        hdc = ctypes.windll.user32.GetDC(hwnd)
+        if hdc:
+            LOGPIXELSX = 88
+            dpi = ctypes.windll.gdi32.GetDeviceCaps(hdc, LOGPIXELSX)
+            ctypes.windll.user32.ReleaseDC(hwnd, hdc)
+            if dpi:
+                return int(dpi)
+    except (AttributeError, OSError):
+        pass
+    return 96
+
+
 def cursor_pos():
     p = wintypes.POINT()
     if not ctypes.windll.user32.GetCursorPos(ctypes.byref(p)):
