@@ -182,12 +182,14 @@ html, body {
 }
 .tabular { font-variant-numeric: tabular-nums; }
 
-/* ───────────────────────────── drag cursor */
-body.draggable,
-body.draggable .wrap,
-body.draggable .wrap *:not(.ctx-menu):not(.ctx-menu *) {
-  cursor: move;
-}
+/* ───────────────────────────── drag cursor
+   Kein Dauer-Move-Cursor im entsperrten Zustand mehr: "drag anywhere" blutete
+   als move-Cursor auf JEDES Element unter .wrap (auch Buttons/Inputs) und nervt,
+   weil entsperrt der Normalzustand ist. Das Ziehen ist mousedown-gated über
+   ui.locked (overlay-base.js) — die Klasse .draggable steuerte nur die Optik.
+   Der Move-Cursor erscheint jetzt erst während der aktiven Drag-Geste
+   (body.dragging). Wer den alten Hinweis-Cursor will, setzt ihn projektseitig
+   per `body.draggable … { cursor: move }`. */
 body.dragging, body.dragging * {
   cursor: move !important;
   user-select: none;
