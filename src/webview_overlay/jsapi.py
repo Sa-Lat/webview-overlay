@@ -12,7 +12,7 @@ from __future__ import annotations
 import sys
 import threading
 
-from . import net, win32
+from . import layout, net, win32
 
 # Fixed menu command ids (kept ≥100, clear of common WM_COMMAND territory).
 # Theme/size items get dynamic ids derived from these bases.
@@ -64,6 +64,7 @@ class JsApi:
         self._window = None
         self.fingerprint = None
         self.primary_rect = (0, 0, 1920, 1080)
+        self.monitors = [self.primary_rect]
         self.anchor_r = None
         self.anchor_b = None
 
@@ -161,7 +162,7 @@ class JsApi:
             anchor_b = self.anchor_b if self.anchor_b is not None else b
             new_x = anchor_r - w
             new_y = anchor_b - h
-            px, py, pw, ph = self.primary_rect
+            px, py, pw, ph = self._clamp_rect(l, t, r, b)
             if new_x < px: new_x = px
             if new_x + w > px + pw: new_x = px + pw - w
             if new_y < py: new_y = py
@@ -345,6 +346,14 @@ class JsApi:
         self.anchor_b = b
         self.store.save_layout_anchor(self.fingerprint, r, b)
 
+    def _clamp_rect(self, l, t, r, b):
+        """Clamp bounds for a resize/move = the monitor the window currently
+        sits on (by its center), not always the primary. Without this a card
+        dragged to a secondary monitor snaps back to the primary on every
+        height/width change."""
+        cx, cy = (l + r) // 2, (t + b) // 2
+        return layout.monitor_containing(self.monitors, self.primary_rect, cx, cy)
+
     # ── drag ────────────────────────────────────────────────────────────
     def start_drag(self):
         if self.locked or not self.hwnd:
@@ -403,7 +412,7 @@ class JsApi:
         anchor_r = self.anchor_r if self.anchor_r is not None else r
         new_y = anchor_b - new_h
         new_x = anchor_r - w
-        px, py, pw, ph = self.primary_rect
+        px, py, pw, ph = self._clamp_rect(l, t, r, b)
         if new_y < py: new_y = py
         if new_y + new_h > py + ph: new_y = py + ph - new_h
         if new_x < px: new_x = px

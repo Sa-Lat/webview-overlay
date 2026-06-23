@@ -60,22 +60,45 @@ def detect_layout_win():
     fp = f"mon{len(mons)}:" + ",".join(
         f"{w}x{h}+{x}+{y}" for x, y, w, h, _ in mons_sorted
     )
-    return {"fingerprint": fp, "primary": primary[0]}
+    return {
+        "fingerprint": fp,
+        "primary": primary[0],
+        "monitors": [(x, y, w, h) for x, y, w, h, _ in mons_sorted],
+    }
 
 
 def detect_layout(sw, sh):
     return detect_layout_win() or {
         "fingerprint": f"fallback:{sw}x{sh}",
         "primary": (0, 0, sw, sh),
+        "monitors": [(0, 0, sw, sh)],
     }
 
 
 def anchor_in_bounds(anchor_r, anchor_b, w, h, primary) -> bool:
     """A saved bottom-right anchor must place the whole window within the
-    primary monitor. Returns False for stale anchors from a previous (larger)
+    given monitor rect. Returns False for stale anchors from a previous (larger)
     layout so the caller can fall back to bottom-right of current primary."""
     px, py, pw, ph = primary
     x = anchor_r - w
     y = anchor_b - h
     return (px <= x and x + w <= px + pw
             and py <= y and y + h <= py + ph)
+
+
+def anchor_on_any_monitor(anchor_r, anchor_b, w, h, monitors) -> bool:
+    """A saved anchor is valid if the window fits fully within *any* monitor —
+    not just the primary. This is what lets the card stay on a secondary
+    monitor across restarts/resizes instead of snapping back to primary."""
+    return any(anchor_in_bounds(anchor_r, anchor_b, w, h, m) for m in monitors)
+
+
+def monitor_containing(monitors, primary, x, y):
+    """The monitor rect whose bounds contain point (x, y) — used to clamp a
+    resize/move to the monitor the window actually sits on. Falls back to
+    `primary` when the point is off every monitor (or none are known)."""
+    for m in monitors or ():
+        mx, my, mw, mh = m
+        if mx <= x < mx + mw and my <= y < my + mh:
+            return m
+    return primary

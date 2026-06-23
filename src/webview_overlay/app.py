@@ -103,6 +103,7 @@ def run(config: OverlayConfig) -> None:
     px, py, pw, ph = lay["primary"]
     api.fingerprint = fp
     api.primary_rect = (px, py, pw, ph)
+    api.monitors = lay.get("monitors", [(px, py, pw, ph)])
 
     init_w = api.width
     init_h = config.initial_height
@@ -111,10 +112,10 @@ def run(config: OverlayConfig) -> None:
     if fp in layouts:
         anchor_r = int(layouts[fp].get("anchor_r", px + pw - 20))
         anchor_b = int(layouts[fp].get("anchor_b", py + ph - 20))
-        if not layout.anchor_in_bounds(anchor_r, anchor_b, init_w, init_h, lay["primary"]):
+        if not layout.anchor_on_any_monitor(anchor_r, anchor_b, init_w, init_h, api.monitors):
             sys.stderr.write(
-                f"saved anchor ({anchor_r},{anchor_b}) out of primary bounds "
-                f"{lay['primary']}; resetting to bottom-right\n")
+                f"saved anchor ({anchor_r},{anchor_b}) off every monitor "
+                f"{api.monitors}; resetting to primary bottom-right\n")
             anchor_r = px + pw - 20
             anchor_b = py + ph - 20
             store.save_layout_anchor(fp, anchor_r, anchor_b)
